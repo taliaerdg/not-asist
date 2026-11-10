@@ -1,0 +1,21 @@
+{
+  "name": "not-asist",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check public/app.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "mammoth": "^1.9.0",
+    "multer": "^2.0.0",
+    "pdfjs-dist": "^6.2.108"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

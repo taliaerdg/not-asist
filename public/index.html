@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#11131a" />
+    <meta name="description" content="Belgelerinizi, ders notlarınızı ve ses kayıtlarınızı düzenli çalışma materyallerine dönüştürün." />
+    <title>Not Asist — Akıllı çalışma alanınız</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="Not Asist ana sayfa">
+          <span class="brand-mark"><span></span><span></span><span></span></span>
+          <span>not<span class="brand-light">asist</span></span>
+          <span class="brand-badge">BETA</span>
+        </a>
+        <p class="nav-caption">ÇALIŞMA ALANI</p>
+        <nav class="primary-nav" aria-label="Ana menü">
+          <a class="nav-link active" href="#workspace"><span class="nav-icon">✳</span>Yeni çalışma<span class="nav-plus">+</span></a>
+          <a class="nav-link" href="#results"><span class="nav-icon">▤</span>Notlarım</a>
+          <a class="nav-link" href="#quiz-section"><span class="nav-icon">⌑</span>Sınavlar</a>
+        </nav>
+        <div class="sidebar-card">
+          <div class="sparkle">✳</div>
+          <div class="sidebar-card-title">Daha verimli çalış.</div>
+          <p>Notlarını tek bir yerde topla, sınavlara güvenle hazırlan.</p>
+          <a href="#workspace">İlk notunu oluştur <span>↗</span></a>
+        </div>
+        <div class="sidebar-footer">
+          <span class="avatar">N</span>
+          <div class="profile-copy"><strong>Çalışma alanım</strong><span>Ücretsiz plan</span></div>
+          <button class="icon-button sidebar-more" aria-label="Profil menüsü">···</button>
+        </div>
+      </aside>
+
+      <main class="main-content" id="workspace">
+        <header class="topbar">
+          <div class="breadcrumbs">Çalışma alanı <span>/</span> <strong>Yeni çalışma</strong></div>
+          <div class="topbar-actions">
+            <div class="connection-status"><span class="status-dot"></span><span id="provider-status">Bağlanıyor…</span></div>
+            <span class="usage-badge hidden" id="usage-badge" title="Bugün kalan AI analiz hakkın"></span>
+            <button class="icon-button theme-toggle" id="theme-toggle" aria-label="Açık temaya geç" title="Temayı değiştir">☼</button>
+          </div>
+        </header>
+
+        <section class="welcome">
+          <div class="eyebrow"><span class="eyebrow-dot"></span>DAHA AKILLI ÇALIŞMANIN YENİ YOLU</div>
+          <h1>Öğrenmek için alan aç.</h1>
+          <p>Dağınık içeriklerini derli toplu notlara, kalıcı öğrenmeye dönüştür.</p>
+        </section>
+
+        <section class="workspace-grid">
+          <div class="input-column">
+            <div class="section-heading">
+              <div><h2>Nasıl başlamak istersin?</h2><p>İçeriğini ekle, çalışma rehberini birlikte oluşturalım.</p></div>
+              <span class="step-tag"><span>01</span> İÇERİĞİNİ EKLE</span>
+            </div>
+
+            <div class="mode-tabs" role="tablist" aria-label="İçerik türü">
+              <button class="mode-tab selected" type="button" id="document-tab" role="tab" aria-selected="true"><span>▤</span> Belge &amp; not</button>
+              <button class="mode-tab" type="button" id="audio-tab" role="tab" aria-selected="false"><span>◖</span> Ses kaydı</button>
+            </div>
+
+            <form id="analysis-form">
+              <div class="document-panel" id="document-panel">
+                <label class="dropzone" id="dropzone" for="file-input">
+                  <input id="file-input" name="file" type="file" accept=".pdf,.txt,.md,.docx,application/pdf,text/plain" hidden />
+                  <span class="upload-icon">↑</span>
+                  <span class="drop-title">Dosyanı buraya bırak</span>
+                  <span class="drop-subtitle">ya da <span>bilgisayarından seç</span></span>
+                  <span class="file-types"><span>PDF</span><span>DOCX</span><span>TXT</span><span>MD</span><span>15 MB'a kadar</span></span>
+                </label>
+                <div class="selected-file hidden" id="selected-file">
+                  <span class="file-icon">▤</span><span class="file-name" id="file-name"></span>
+                  <button class="icon-button remove-file" id="remove-file" type="button" aria-label="Dosyayı kaldır">×</button>
+                </div>
+                <div class="text-entry-label"><label for="source-text">veya metnini buraya yapıştır</label><span id="character-count">0 karakter</span></div>
+                <textarea id="source-text" name="text" placeholder="Ders notlarını, bir makaleyi veya çalışmak istediğin herhangi bir metni ekle..." rows="5"></textarea>
+              </div>
+
+              <div class="audio-panel hidden" id="audio-panel">
+                <div class="audio-record-card">
+                  <div class="audio-icon">◖</div>
+                  <div class="audio-copy"><strong>Ders anlatımını metne dönüştür</strong><p>Ses dosyası yükle ya da canlı dikteyi başlat.</p></div>
+                  <button type="button" class="record-button" id="record-button"><span class="record-dot"></span> Kaydı başlat</button>
+                </div>
+                <label class="audio-upload" for="audio-input"><span>↑</span> Ses dosyası seç <small>MP3, M4A, WAV, WEBM · 15 MB</small>
+                  <input id="audio-input" type="file" accept="audio/*,.mp3,.m4a,.wav,.webm,.ogg" hidden />
+                </label>
+                <div class="selected-file hidden" id="selected-audio">
+                  <span class="file-icon">♫</span><span class="file-name" id="audio-name"></span>
+                  <button class="icon-button remove-file" id="remove-audio" type="button" aria-label="Ses dosyasını kaldır">×</button>
+                </div>
+                <div class="live-transcript hidden" id="live-transcript"><span class="status-dot"></span> Canlı dikte etkin. Konuşmayı bitirdiğinde durdur.</div>
+                <div class="text-entry-label"><label for="transcript-text">Transkriptin</label><span id="transcript-count">0 karakter</span></div>
+                <textarea id="transcript-text" placeholder="Canlı dikte metni burada görünecek. Sonrasında özetini oluşturmaya devam edebilirsin..." rows="5"></textarea>
+              </div>
+
+              <div class="language-row">
+                <div class="language-label"><span class="language-icon">文</span><div><strong>Çalışma dili</strong><span>İçeriklerin hangi dilde hazırlansın?</span></div></div>
+                <div class="language-options">
+                  <label class="language-option"><input type="radio" name="language" value="tr" /><span>🇹🇷</span> Türkçe</label>
+                  <label class="language-option"><input type="radio" name="language" value="en" /><span>🇬🇧</span> English</label>
+                </div>
+              </div>
+              <p class="language-hint" id="language-hint">İşleme başlamadan önce bir çıktı dili seç.</p>
+
+              <button class="generate-button" id="generate-button" type="submit"><span>✳</span> Çalışma rehberimi oluştur <span class="button-arrow">↗</span></button>
+              <div class="privacy-note"><span>♧</span> <span id="privacy-text">Dosyalar kaydedilmez.</span></div>
+              <div class="error-banner hidden" id="error-banner" role="alert"></div>
+            </form>
+          </div>
+
+          <aside class="features-column">
+            <div class="preview-card">
+              <div class="preview-card-top"><span class="mini-document-icon">▤</span><span class="preview-dots">···</span></div>
+              <div class="preview-caption">ÇALIŞMA REHBERİN</div>
+              <div class="skeleton-line wide"></div><div class="skeleton-line medium"></div>
+              <div class="preview-highlight"><span></span><span></span><span></span></div>
+              <div class="skeleton-line medium"></div><div class="skeleton-line short"></div>
+              <div class="preview-stats"><span>✳ <b>Özet</b></span><span>⌗ <b>Sözlük</b></span><span>⌑ <b>Quiz</b></span></div>
+              <div class="preview-orbit orbit-one"></div><div class="preview-orbit orbit-two"></div>
+            </div>
+            <div class="feature-list">
+              <div class="feature-item"><span class="feature-icon purple">✳</span><div><strong>Sınav odaklı özet</strong><p>Önemli fikirleri ve kritik noktaları yakala.</p></div><span class="feature-check">✓</span></div>
+              <div class="feature-item"><span class="feature-icon amber">⌗</span><div><strong>Kavram sözlüğü</strong><p>Teknik terimleri sade açıklamalarla öğren.</p></div><span class="feature-check">✓</span></div>
+              <div class="feature-item"><span class="feature-icon mint">★</span><div><strong>Önemli vurgular</strong><p>PDF'teki renkli ve işaretli kısımları ayrı gör.</p></div><span class="feature-check">✓</span></div>
+              <div class="feature-item"><span class="feature-icon coral">⌑</span><div><strong>Kendini sına</strong><p>Farklı soru türleriyle bilgini pekiştir.</p></div><span class="feature-check">✓</span></div>
+            </div>
+            <div class="quote-card"><span>“</span><p>İyi notlar, yalnızca bilgiyi saklamaz. Nasıl düşündüğünü de gösterir.</p><span class="quote-author">ÇALIŞMA NOTU · 01</span></div>
+          </aside>
+        </section>
+
+        <section class="results-section hidden" id="results">
+          <div class="results-heading">
+            <div><span class="eyebrow"><span class="eyebrow-dot"></span>ÇALIŞMA REHBERİN HAZIR</span><h2>Çalışma rehberin.</h2><p id="result-notice"></p></div>
+            <button class="secondary-button" id="download-button" type="button">↓ <span>Notları indir</span></button>
+          </div>
+          <div class="result-tabs" role="tablist" aria-label="Çalışma rehberi bölümleri">
+            <button class="result-tab active" data-panel="summary-result" type="button">✳ Özet &amp; vurgular</button>
+            <button class="result-tab" data-panel="glossary-result" type="button">⌗ Kavram sözlüğü</button>
+            <button class="result-tab" data-panel="quiz-section" type="button">⌑ Sınav simülasyonu</button>
+          </div>
+          <div class="result-panel" id="summary-result"><div class="result-card"><div class="result-card-title">Sınav odaklı özet <span class="result-pill">✳ AKADEMİK ÖZET</span></div><div id="summary-content" class="summary-content"></div></div><div class="result-card"><div class="result-card-title">Önemli vurgular ve notlar <span class="result-subtitle" id="highlight-count"></span></div><div id="highlights-content" class="highlights-content"></div></div><div class="result-card"><div class="result-card-title">Sınavda dikkat et <span class="result-pill warm">YÜKSEK ÖNCELİK</span></div><div id="exam-content" class="exam-content"></div></div></div>
+          <div class="result-panel hidden" id="glossary-result"><div class="result-card"><div class="result-card-title">Anahtar terimler <span class="result-subtitle">KONUYA ÖZGÜ KAVRAMLAR</span></div><div id="glossary-content" class="glossary-grid"></div></div></div>
+          <div class="result-panel hidden" id="quiz-section"><div class="quiz-header"><div><div class="result-card-title">Bilgini test et <span class="result-pill">AKTİF HATIRLAMA</span></div><p>Her soru türünde öğrendiklerini pekiştir.</p></div><span class="quiz-progress" id="quiz-progress"></span></div><div id="quiz-content" class="quiz-content"></div></div>
+        </section>
+        <footer class="page-footer"><span>not<span class="brand-light">asist</span> <span>·</span> Öğrenmeye küçük bir alan aç.</span><span>Gizliliğin bizim için önemli <span>♧</span></span></footer>
+      </main>
+    </div>
+
+    <div class="lock-screen hidden" id="lock-screen" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+      <form class="lock-card" id="lock-form">
+        <span class="brand-mark lock-mark"><span></span><span></span><span></span></span>
+        <h2 id="lock-title">not<span class="brand-light">asist</span>'e hoş geldin</h2>
+        <p>Bu uygulama arkadaş grubuna özel. Devam etmek için sana verilen giriş şifresini yaz.</p>
+        <label class="visually-hidden" for="lock-input">Giriş şifresi</label>
+        <input id="lock-input" type="password" autocomplete="current-password" placeholder="Giriş şifresi" required />
+        <button class="generate-button" type="submit">Giriş yap <span class="button-arrow">↗</span></button>
+        <p class="lock-error hidden" id="lock-error" role="alert"></p>
+      </form>
+    </div>
+  </body>
+</html>
