@@ -1,56 +1,122 @@
-# Not Asist
+# Not Asist — AI Study Guide Generator
 
-Türkçe ve İngilizce çıktı sunan, belgeleri ve ders notlarını çalışma rehberlerine dönüştüren web uygulaması.
+**Turn lecture slides, notes and recordings into exam-ready study guides.**
+Upload a PDF, DOCX or text file (or record a lecture), choose Turkish or English, and get a structured summary, a glossary of key terms, likely exam points and a practice quiz.
 
-## Bilgisayarda çalıştırma
+> 🇹🇷 Not Asist; ders slaytlarını, notları ve ses kayıtlarını sınav odaklı çalışma rehberlerine dönüştüren bir web uygulamasıdır. Arayüz Türkçedir; çıktı Türkçe veya İngilizce olabilir.
 
-1. Node.js 22.13+ veya 24+ kurun.
-2. `npm install` komutunu çalıştırın.
-3. `.env.example` dosyasını `.env` olarak kopyalayın. İsteğe bağlı olarak `GEMINI_API_KEY` (ücretsiz) veya `OPENAI_API_KEY` ekleyin. Anahtar yoksa belge analizi yerel, kaynak metne dayalı modda çalışır.
-4. `npm start` komutuyla sunucuyu başlatın ve `http://localhost:3000` adresini açın.
+![Home screen](docs/screenshots/home.jpg)
 
-Canlı dikte Chrome/Edge SpeechRecognition desteğini kullanır; tarayıcıdan mikrofon izni verilmesi gerekir. Ses dosyası transkripsiyonu bir AI anahtarı gerektirir.
+## Features
 
-## Arkadaşlarla paylaşma (tek anahtar, tek link)
+- **Exam-focused summaries** – section-by-section study guide that follows the document's own headings/slides, with an overview paragraph and ★ markers on the most critical points.
+- **Bilingual output** – Turkish or English. In Turkish mode, technical terms are followed by their English equivalents, e.g. *süreç (process)*.
+- **Glossary** – key domain terms with definitions extracted from the source.
+- **Highlight detection** – finds highlighted, underlined and coloured text in PDFs and lists it separately.
+- **Practice quiz** – open-ended questions with model answers, true/false, and "select all that apply" questions with instant feedback.
+- **Lecture audio** – upload a recording for AI transcription, or use live dictation in the browser (Chrome/Edge).
+- **Works without an API key** – a built-in local summarizer analyses document structure and scores sentences, so the app is usable offline and never breaks when the AI quota runs out.
+- **Shareable with a group** – optional access code, per-user daily AI limits, a shared daily cap and per-minute throttling, so a single free API key can be shared safely.
+- Dark/light theme, responsive layout, Markdown export of the study guide.
 
-Uygulama tek bir Gemini anahtarıyla internette yayınlandığında şu korumalar devreye girer (hepsi `.env` / ortam değişkenleriyle ayarlanır):
-
-| Değişken | Varsayılan | Açıklama |
+| Summary | Glossary | Quiz |
 |---|---|---|
-| `ACCESS_CODE` | boş | Doluysa uygulama açılışta bu şifreyi sorar. Linki bilen yabancılar kotanı harcayamaz. |
-| `DAILY_AI_LIMIT_PER_USER` | 15 | Bir kişinin (tarayıcının) günlük AI analiz hakkı. Hak bitince yerel analiz çalışır. |
-| `DAILY_AI_LIMIT_TOTAL` | 200 | Herkes için toplam günlük AI analiz sınırı. Her analiz 2 Gemini isteği kullanır; Flash-Lite ücretsiz katmanı günde yaklaşık 500 istek verir. |
-| `AI_REQUESTS_PER_MINUTE` | 8 | Dakikalık AI istek sınırı. Yoğunlukta istekler kısa süre bekletilir, olmazsa yerel analiz gösterilir. |
-| `GEMINI_MODEL` | gemini-3.5-flash-lite | Kullanılacak Gemini modeli. |
-| `GEMINI_FALLBACK_MODEL` | gemini-3.1-flash-lite | Ana model yoğunsa (503) veya kotası dolduysa (429) denenecek yedek model; kotası ayrıdır. `none` ile kapatılır. |
+| ![Summary](docs/screenshots/summary.jpg) | ![Glossary](docs/screenshots/glossary.jpg) | ![Quiz](docs/screenshots/quiz.jpg) |
 
-Günlük haklar Gemini kotasıyla aynı anda (Pasifik saatiyle gece yarısı, Türkiye saatiyle 10:00 veya 11:00) yenilenir. Sayaçlar sunucu belleğinde tutulur; sunucu yeniden başlarsa sıfırlanır, ama toplam sınır ve Google'ın kendi kotası yine de korur. Gemini yoğunsa uygulama kısa bekleyip tekrar dener, sonra yedek modele geçer; ikisi de olmazsa hata vermez, yerel analize geçer.
+| Light theme | Access screen |
+|---|---|
+| ![Light theme](docs/screenshots/summary-light.jpg) | ![Access code screen](docs/screenshots/login.jpg) |
 
-### Render'da yayınlama
+*Screenshots show the offline (no API key) mode on a sample operating-systems lecture.*
 
-1. Projeyi GitHub'a gönderin (VS Code → Source Control → Publish to GitHub, private depo). `.env` ve `node_modules` `.gitignore` sayesinde yüklenmez.
-2. render.com → New → Web Service → depoyu seçin. Runtime: Node, Build Command: `npm install`, Start Command: `npm start`, Instance Type: Free.
-3. Environment Variables bölümüne `GEMINI_API_KEY` ve `ACCESS_CODE` ekleyin (istenirse diğer değişkenler de). `PORT` eklemeyin.
-4. Deploy edin ve verilen `https://...onrender.com` linkini şifreyle birlikte paylaşın.
+## How it works
 
-Ücretsiz planda sunucu 15 dakika kullanılmazsa uyur; ilk açılış yaklaşık bir dakika sürer.
+```mermaid
+flowchart LR
+    U[Browser] -->|PDF / DOCX / TXT / audio| S[Express server]
+    S --> X[Text & structure extraction<br/>pdf.js, mammoth]
+    X --> D{AI available<br/>and quota left?}
+    D -->|yes| G[Gemini API<br/>summary + quiz in parallel]
+    D -->|no / busy / quota full| L[Local summarizer<br/>summarizer.js]
+    G -->|wrong language?| R[Retry once] --> O
+    G --> O[Study guide JSON]
+    L --> O
+    O --> U
+```
 
-## Özellikler
+**AI mode (Gemini or OpenAI).** The extracted text is sent with two prompts in parallel: one produces the study guide (overview, sections, glossary, exam points), the other produces the quiz. Responses are requested as JSON and validated. If the model answers in the wrong language, the request is retried once with a stronger instruction. When Gemini is overloaded (HTTP 503) the server waits and retries, then falls back to a second model with its own quota; if everything fails, the local summarizer is used and the user sees a short explanation instead of an error.
 
-- PDF, DOCX, TXT ve Markdown dosyalarından metin çıkarma; PDF içindeki renkli metni ve vurgulama/altını çizme ek açıklamalarını tespit etme.
-- Çıktı dili seçimi: Türkçe (AI etkinse teknik terimlerin İngilizce karşılıklarıyla) veya İngilizce.
-- Bölüm bölüm, sınav odaklı özet (genel bakış + her başlık için maddeler, ★ ile en kritik noktalar), terim sözlüğü, önemli nokta listesi, açık uçlu, doğru/yanlış ve çoklu seçim soruları.
-- API anahtarı yoksa yerel özetleyici (`summarizer.js`) PDF'in başlık/slayt yapısını çıkarır, cümleleri tanım, vurgu, karşılaştırma gibi ipuçlarına göre puanlar ve her bölümden en önemli maddeleri seçer. API anahtarı varsa özet AI tarafından kendi cümleleriyle, çok daha ayrıntılı yazılır.
-- Ses dosyası transkripsiyonu (Gemini veya OpenAI) ve tarayıcıda canlı dikte.
-- Koyu/açık tema, indirilebilir Markdown çalışma rehberi ve mobil uyumlu arayüz.
+**Local mode (`summarizer.js`).** Without any API, the app:
 
-## Yapı
+1. Rebuilds the document structure from PDF text positions and font sizes: slide titles, bullet points (including Wingdings/private-use bullet glyphs), repeated headers/footers removed, wrapped lines merged.
+2. Scores every sentence/bullet with a TF-IDF-style weight plus cues for definitions, emphasis ("important", "dikkat"), comparisons, lists and cause–effect, with light Turkish suffix stemming.
+3. Selects the most informative, non-redundant points per section and builds a glossary from definition patterns ("X is defined as…", "… denir", acronyms) and frequent terms.
+4. Generates quiz questions, including false statements created by swapping key terms.
 
-- `server.js`: Express API ve dosya işleme.
-- `ai.js`: Gemini ve OpenAI entegrasyonu (analiz ve ses transkripsiyonu).
-- `access.js`: giriş şifresi, günlük kullanım hakları ve istek sınırları.
-- `summarizer.js`: API anahtarı gerektirmeyen yerel özetleme motoru.
-- `public/index.html`, `public/styles.css`, `public/app.js`: istemci uygulaması.
-- `GET /api/health`, `POST /api/verify-access`, `POST /api/analyze`, `POST /api/transcribe`: API uç noktaları.
+**Access control (`access.js`).** An optional access code (compared in constant time), per-browser and global daily AI limits that reset with Gemini's quota, a per-minute AI request budget, and IP rate limiting on login and API routes.
 
-Dosyalar bellekte işlenir ve sunucuya kalıcı olarak kaydedilmez. AI anahtarı yapılandırıldığında belge metinleri analiz için ilgili sağlayıcıya iletilir. Gemini'nin ücretsiz katmanında (AB dışından) gönderilen içerik Google tarafından ürün geliştirmede kullanılabilir; kişisel veya gizli belgeler yüklemeyin. API anahtarını istemciye koymayın; sadece sunucudaki `.env` dosyasını veya barındırma platformunun ortam değişkenlerini kullanın.
+## Tech stack
+
+- **Backend:** Node.js 22+, Express 5, Multer (in-memory uploads), pdf.js, mammoth
+- **Frontend:** vanilla HTML, CSS and JavaScript (no framework, no build step)
+- **AI:** Google Gemini API (free tier) or OpenAI API, both optional
+- **Hosting:** Render (free web service)
+
+## Getting started
+
+```bash
+git clone https://github.com/taliaerdg/not-asist.git
+cd not-asist
+npm install
+cp .env.example .env   # optional: add GEMINI_API_KEY and ACCESS_CODE
+npm start              # http://localhost:3000
+```
+
+A free Gemini API key can be created in [Google AI Studio](https://aistudio.google.com). Without a key the app runs in local mode.
+
+### Configuration
+
+| Variable | Default | Description |
+|---|---|---|
+| `GEMINI_API_KEY` | – | Enables Gemini for summaries, quizzes and audio transcription. |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Primary Gemini model. |
+| `GEMINI_FALLBACK_MODEL` | `gemini-3.1-flash-lite` | Used when the primary model is overloaded or out of quota (`none` disables it). |
+| `OPENAI_API_KEY` / `OPENAI_MODEL` | – / `gpt-4o-mini` | Alternative provider, used only if no Gemini key is set. |
+| `ACCESS_CODE` | – | If set, users must enter this code before using the app. |
+| `DAILY_AI_LIMIT_PER_USER` | `15` | AI analyses per browser per day (`0` = unlimited). |
+| `DAILY_AI_LIMIT_TOTAL` | `200` | AI analyses per day for everyone combined. |
+| `AI_REQUESTS_PER_MINUTE` | `8` | Shared per-minute AI request budget. |
+
+### Deploying to Render
+
+1. Push the repository to GitHub (`.env` is git-ignored).
+2. On Render: **New → Web Service**, select the repository. Build command `npm install`, start command `npm start`, instance type **Free**.
+3. Add `GEMINI_API_KEY` and `ACCESS_CODE` under **Environment Variables** and deploy.
+
+Every push to `main` redeploys automatically. Free instances sleep after 15 minutes of inactivity, so the first request may take about a minute.
+
+## Project structure
+
+```
+├── server.js        # Express app, routes, document extraction
+├── ai.js            # Gemini / OpenAI calls, prompts, retries, language check
+├── access.js        # access code, usage limits, rate limiting
+├── summarizer.js    # local (offline) summarization engine
+└── public/
+    ├── index.html
+    ├── styles.css
+    └── app.js       # client: uploads, rendering, quiz, access screen
+```
+
+API endpoints: `GET /api/health`, `POST /api/verify-access`, `POST /api/analyze`, `POST /api/transcribe`.
+
+## Privacy
+
+Uploaded files are processed in memory and never stored. In AI mode, document text is sent to the configured provider; on Gemini's free tier, content may be used by Google to improve its products, so personal or confidential documents should not be uploaded. API keys stay on the server and are never sent to the browser.
+
+## Possible improvements
+
+- Persist study guides and quiz results per user
+- Spaced-repetition flashcards generated from the glossary
+- Export to PDF/Anki
+- Usage counters stored in a database instead of memory
